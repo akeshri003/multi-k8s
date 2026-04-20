@@ -35,7 +35,7 @@ jobs:
         uses: google-github-actions/auth@v3
         with:
           project_id: multi-k8s-493910
-          workload_identity_provider: projects/871393691181/locations/global/workloadIdentityPools/github-pool-multi-k8s/providers/gh-actions-provider-multi-k8s
+          workload_identity_provider: projects/871393691181/locations/global/workloadIdentityPools/github-pool-multi-k8s/providers/github-provider-multi-k8s
           service_account: gh-actions-multi-k8s@multi-k8s-493910.iam.gserviceaccount.com
 
       - name: Stop if auth failed
