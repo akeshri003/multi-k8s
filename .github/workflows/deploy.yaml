@@ -1,35 +1,28 @@
 name: deploy
-
 on:
   workflow_dispatch:
-
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
     permissions:
       id-token: write
       contents: read
-
     steps:
       - uses: actions/checkout@v4
-
       - name: Echo auth inputs
         run: |
           echo "project_id=multi-k8s-493910"
-          echo "workload_identity_provider=projects/871393691181/locations/global/workloadIdentityPools/github-pool-multi-k8s/providers/gh-actions-provider-multi-k8s"
+          echo "workload_identity_provider=projects/871393691181/locations/global/workloadIdentityPools/github-pool-multi-k8s/providers/github-provider-multi-k8s"
           echo "service_account=gh-actions-multi-k8s@multi-k8s-493910.iam.gserviceaccount.com"
-
       - name: Show GitHub OIDC claims
         env:
-          AUDIENCE: projects/871393691181/locations/global/workloadIdentityPools/github-pool-multi-k8s/providers/gh-actions-provider-multi-k8s
+          AUDIENCE: projects/871393691181/locations/global/workloadIdentityPools/github-pool-multi-k8s/providers/github-provider-multi-k8s
         run: |
           TOKEN_JSON=$(curl -sSf \
             -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
             "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=${AUDIENCE}")
           ID_TOKEN=$(echo "$TOKEN_JSON" | jq -r .value)
           echo "$ID_TOKEN" | awk -F. '{print $2}' | base64 -d 2>/dev/null | jq .
-
       - id: auth
         continue-on-error: true
         uses: google-github-actions/auth@v3
@@ -37,20 +30,8 @@ jobs:
           project_id: multi-k8s-493910
           workload_identity_provider: projects/871393691181/locations/global/workloadIdentityPools/github-pool-multi-k8s/providers/github-provider-multi-k8s
           service_account: gh-actions-multi-k8s@multi-k8s-493910.iam.gserviceaccount.com
-
       - name: Stop if auth failed
         if: steps.auth.outcome == 'failure'
         run: |
-          echo "Google auth failed"
+          echo "Auth step failed"
           exit 1
-
-      - uses: google-github-actions/get-gke-credentials@v3
-        with:
-          cluster_name: autopilot-cluster-1
-          location: us-central1
-          project_id: multi-k8s-493910
-
-      - name: Verify cluster access
-        run: |
-          kubectl cluster-info
-          kubectl get nodes
