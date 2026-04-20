@@ -9,11 +9,13 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@v4
+
       - name: Echo auth inputs
         run: |
           echo "project_id=multi-k8s-493910"
           echo "workload_identity_provider=projects/871393691181/locations/global/workloadIdentityPools/github-pool-multi-k8s/providers/github-provider-multi-k8s"
           echo "service_account=gh-actions-multi-k8s@multi-k8s-493910.iam.gserviceaccount.com"
+
       - name: Show GitHub OIDC claims
         env:
           AUDIENCE: projects/871393691181/locations/global/workloadIdentityPools/github-pool-multi-k8s/providers/github-provider-multi-k8s
@@ -23,6 +25,7 @@ jobs:
             "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=${AUDIENCE}")
           ID_TOKEN=$(echo "$TOKEN_JSON" | jq -r .value)
           echo "$ID_TOKEN" | awk -F. '{print $2}' | base64 -d 2>/dev/null | jq .
+
       - id: auth
         continue-on-error: true
         uses: google-github-actions/auth@v3
@@ -30,8 +33,9 @@ jobs:
           project_id: multi-k8s-493910
           workload_identity_provider: projects/871393691181/locations/global/workloadIdentityPools/github-pool-multi-k8s/providers/github-provider-multi-k8s
           service_account: gh-actions-multi-k8s@multi-k8s-493910.iam.gserviceaccount.com
+
       - name: Stop if auth failed
         if: steps.auth.outcome == 'failure'
         run: |
-          echo "Auth step failed"
+          echo "Auth step failed — check the logs above for the STS error"
           exit 1
