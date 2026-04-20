@@ -1,41 +1,54 @@
-name: deploy
+name: Deploy
+
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     permissions:
-      id-token: write
       contents: read
+      id-token: write
+    env:
+      PROJECT_ID: multi-k8s-493910
+      GKE_CLUSTER: autopilot-cluster-1
+      GKE_LOCATION: us-central1
+      WIF_PROVIDER: projects/871393691181/locations/global/workloadIdentityPools/github-pool-multi-k8s/providers/github-provider-multi-k8s
+      GCP_SERVICE_ACCOUNT: gh-actions-multi-k8s@multi-k8s-493910.iam.gserviceaccount.com
+
     steps:
       - uses: actions/checkout@v4
 
-      - name: Echo auth inputs
-        run: |
-          echo "project_id=multi-k8s-493910"
-          echo "workload_identity_provider=projects/871393691181/locations/global/workloadIdentityPools/github-pool-multi-k8s/providers/github-provider-multi-k8s"
-          echo "service_account=gh-actions-multi-k8s@multi-k8s-493910.iam.gserviceaccount.com"
-
-      - name: Show GitHub OIDC claims
-        env:
-          AUDIENCE: projects/871393691181/locations/global/workloadIdentityPools/github-pool-multi-k8s/providers/github-provider-multi-k8s
-        run: |
-          TOKEN_JSON=$(curl -sSf \
-            -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
-            "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=${AUDIENCE}")
-          ID_TOKEN=$(echo "$TOKEN_JSON" | jq -r .value)
-          echo "$ID_TOKEN" | awk -F. '{print $2}' | base64 -d 2>/dev/null | jq .
-
-      - id: auth
-        continue-on-error: true
-        uses: google-github-actions/auth@v3
+      - uses: google-github-actions/auth@v3
         with:
-          project_id: multi-k8s-493910
-          workload_identity_provider: projects/871393691181/locations/global/workloadIdentityPools/github-pool-multi-k8s/providers/github-provider-multi-k8s
-          service_account: gh-actions-multi-k8s@multi-k8s-493910.iam.gserviceaccount.com
+          project_id: ${{ env.PROJECT_ID }}
+          workload_identity_provider: ${{ env.WIF_PROVIDER }}
+          service_account: ${{ env.GCP_SERVICE_ACCOUNT }}
 
-      - name: Stop if auth failed
-        if: steps.auth.outcome == 'failure'
+      - uses: google-github-actions/get-gke-credentials@v3
+        with:
+          cluster_name: ${{ env.GKE_CLUSTER }}
+          location: ${{ env.GKE_LOCATION }}
+          project_id: ${{ env.PROJECT_ID }}
+
+      - name: Apply Kubernetes manifests
+        run: kubectl apply -f k8s
+
+      - name: Wait for rollout
         run: |
-          echo "Auth step failed — check the logs above for the STS error"
-          exit 1
+          kubectl rollout status deployment/client-deployment --timeout=300s
+          kubectl rollout status deployment/server-deployment --timeout=300s
+          kubectl rollout status deployment/worker-deployment --timeout=300s
+
+      - name: Show cluster state
+        run: |
+          kubectl get pods
+          kubectl get services
+          kubectl get ingress
