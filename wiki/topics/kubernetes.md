@@ -1,0 +1,515 @@
+---
+title: Kubernetes
+type: topic
+status: active
+created: 2026-04-17
+updated: 2026-04-23
+tags:
+  - kubernetes
+  - containers
+  - orchestration
+related:
+  - wiki/sources/The Whys and What's of Kubernetes -.md
+  - wiki/sources/2 - Kubernetes in Development and Production.md
+  - wiki/sources/3 - Mapping Existing Knowledge.md
+  - wiki/sources/4 - Adding Config files.md
+  - wiki/sources/5 - Object Types and API Versions.md
+  - wiki/sources/6 - Running Container in Pods.md
+  - wiki/sources/7 - Service Config Files in Depth.md
+  - wiki/sources/8 - Connecting to Running Containers.md
+  - wiki/sources/9 - Entire Deployment Flow.md
+  - wiki/sources/10 - Imperative vs Declarative Deployements.md
+  - wiki/sources/11 - Updating Existing Objects.md
+  - wiki/sources/12 - Declarative Updates in Action.md
+  - wiki/sources/13 - Limitations in Config Updates.md
+  - wiki/sources/14 - Running Containers with Deployments.md
+  - wiki/sources/15 - Deployment Configuration files..md
+  - wiki/sources/16 - Walkthrough Deployment Config.md
+  - wiki/sources/17 - Applying a  Deployment.md
+  - wiki/sources/18 - Why use Services?.md
+  - wiki/sources/19 - Scaling and Chaning Deployments.md
+  - wiki/sources/20 - Updating Deployment Images.md
+  - wiki/sources/21 - Rebuilding the Client Image.md
+  - wiki/sources/22 - Triggering Deployment Updates.md
+  - wiki/sources/23 - Imperatively Updating a Deployment's Image.md
+  - wiki/sources/24 - The Path to Production.md
+  - wiki/sources/25 - A Quick Checkpoint.md
+  - wiki/sources/26 - Recreating the Deployment.md
+  - wiki/sources/27 - NodePort vs ClusterIP Services.md
+  - wiki/sources/28 - The ClusterIP Config.md
+  - wiki/sources/29 - Applying Multiple Files with Kubectl.md
+  - wiki/sources/30 - Express API deployment config.md
+  - wiki/sources/31 - ClusterIP for Express API.md
+  - wiki/sources/32 - Combining Config Into Single Files.md
+  - wiki/sources/33 - The Worker Deployment.md
+  - wiki/sources/34 - Reapplying Batch of Config Files.md
+  - wiki/sources/35 - Volumes vs Persistent Volumes.md
+  - wiki/sources/36 - Last set of config.md
+  - wiki/sources/37 - The need for Volumes with Database.md
+  - wiki/sources/38 -Kubernetes Volumes.md
+  - wiki/sources/39 - Volume vs Persistent Volume.md
+  - wiki/sources/40 - Persistent Volume vs Persistent Volume Claim.md
+  - wiki/sources/41 - Claim Config files.md
+  - wiki/sources/42 - Persistent Volume Access Modes.md
+  - wiki/sources/43 - Where does Kubernetes Allocate Persistent Volumes.md
+  - wiki/sources/44 - Designating a PVC in a POD Template.md
+  - wiki/sources/45 - Applying a PVC.md
+  - wiki/sources/46 -Defining Environment Variables.md
+  - wiki/sources/47 - Adding Environment Variables to Config.md
+  - wiki/sources/48 - Creating an Encoded Secret.md
+  - wiki/sources/49 - Postgres Environment Variable Fix.md
+  - wiki/sources/50 - Environment Variables as Strings.md
+  - wiki/sources/51 - Load Balancer Services.md
+  - wiki/sources/52. - Quick Note on Ingress.md
+  - wiki/sources/53 - Ingress setup notes.md
+  - wiki/sources/54 - Behind the Scenes of Ingress.md
+  - wiki/sources/55 - More Behind the Scenes of Ingress.md
+  - wiki/sources/56 - Ingress Nginx installation and setup.md
+  - wiki/sources/57 - Creating Ingress Configuration.md
+  - wiki/sources/59 - The Deployment Process.md
+  - wiki/sources/60 - CI Setup.md
+  - wiki/sources/61 - Installing google cloud sdk.md
+  - wiki/sources/62 - Service Account Steps for GCP.md
+  - wiki/sources/63 - Unique Deployment Images.md
+  - wiki/sources/64 - Unique Tags for Built Image.md
+  - wiki/sources/65 - Updating the Deployment Script.md
+  - wiki/sources/66 - Configuring the gcloud CLI on the cloud console.md
+  - wiki/sources/67 - Helm and its setup.md
+  - wiki/sources/68 -.md
+  - wiki/sources/68 - The result of ingress-nginx.md
+  - wiki/sources/69 - HTTPS SETUP OVERVIEW.md
+  - wiki/sources/70 - Cert Manager Install.md
+  - wiki/sources/71 - How to wire up Cert Manager.md
+  - wiki/sources/72 - Issuer Config File.md
+  - wiki/sources/73 - Certificate Config File.md
+  - wiki/sources/74 - Deploying Changes.md
+  - wiki/sources/75 - Ingress for Config.md
+  - wiki/sources/76 - skaffold overview.md
+  - wiki/sources/77 - Skaffold Config.md
+  - wiki/sources/78 - Live sync changes.md
+  - wiki/sources/2026-04-22-mental-model-of-github-actions-gke-deployment.md
+  - wiki/sources/2026-04-22-managing-secrets-for-cloud-deployment.md
+  - wiki/analysis/kubernetes-https-cert-manager-flow.md
+  - wiki/analysis/skaffold-local-kubernetes-development.md
+---
+
+# Kubernetes
+
+## Current Synthesis
+
+Kubernetes is an orchestration system for running containerized workloads across multiple machines. In the current source base, its main value proposition is control over heterogeneous workloads: different container types, different counts, and coordination across nodes. The current sources now distinguish local development from production, map Docker Compose ideas into Kubernetes concepts such as prebuilt images and explicit networking, introduce the first concrete manifest/object model through `Pod`, `Service`, `kind`, `apiVersion`, label selectors, and `NodePort`, show the first end-to-end operator loop of applying manifests and verifying status, explain the deeper control flow in which the master tracks desired state, assigns work across nodes, and recreates missing workloads, make the workflow preference explicit in favor of declarative config updates, show the practical beginner update rule of keeping identity fields stable while changing desired config, demonstrate the verification loop for confirming an existing pod changed in place, add the restriction that direct pod updates allow only a narrow set of mutable fields, introduce `Deployment` as the higher-level object that manages one or more identical pods, provide the first concrete deployment manifest with `replicas`, `selector.matchLabels`, and `template`, explain how those deployment pieces fit together, show the first real deployment apply workflow with `kubectl get deployments`, make the reason for `Service` much more concrete by treating it as a stable access layer over changing pod IPs, show that deployment edits can recreate pods and scale pod counts through `replicas`, extend the picture into image-version operations where unchanged manifests do not automatically refresh pods, complete that workflow with the first concrete versioned-image rollout command via `kubectl set image`, widen the scope from isolated objects into a full application architecture that introduces `Ingress`, `ClusterIP`, and `Persistent Volume Claim`, add an explicit migration checkpoint against the old Docker Compose app, begin the real manifest migration by rebuilding the `multi-client` frontend as a three-replica deployment, sharpen the service model for that migration by contrasting `NodePort` as outside-facing development access with `ClusterIP` as internal-only service-to-service networking behind `Ingress`, turn that distinction into a real manifest by creating `client-cluster-ip-service` with the same `component: web` selector and only the two internal-routing fields `port` and `targetPort`, validate the first multi-file Kubernetes app slice by deleting the old frontend resources, applying the entire `k8s/` directory, fixing a YAML problem, and verifying that the new deployment plus internal service are running, extend the same deployment pattern to the backend by creating `server-deployment` for the `multi-server` Express API with `component: server`, port `5000`, and deferred Redis/Postgres environment variables, complete the backend internal-service pair by creating `server-cluster-ip-service`, which targets `component: server` and routes internal traffic through port `5000`, add an organizational aside that multiple Kubernetes objects can be placed in one YAML file separated by `---` even though the course still recommends one separate file per object, continue the real app buildout by adding a worker deployment with no service, reapplying the full batch of manifests and checking logs, introduce Redis as a single-replica deployment plus internal `ClusterIP` service on port `6379`, then close the repetitive manifest phase with Postgres deployment and service before pivoting into the real stateful-workload question: why databases need persistence and why a plain Kubernetes `Volume` is still not enough compared with `PersistentVolume` plus `PersistentVolumeClaim`, revisit outside routing through the ingress sequence, point Docker Desktop users at the official ingress-nginx quick-start docs for the actual local controller installation step, and finally create the first real ingress manifest that routes `/` to `client-cluster-ip-service`, routes `/api/` to `server-cluster-ip-service`, and rewrites `/api` away before the request reaches the Express server ([[The Whys and What's of Kubernetes -]], [[2 - Kubernetes in Development and Production]], [[3 - Mapping Existing Knowledge]], [[4 - Adding Config files]], [[5 - Object Types and API Versions]], [[6 - Running Container in Pods]], [[7 - Service Config Files in Depth]], [[8 - Connecting to Running Containers]], [[9 - Entire Deployment Flow]], [[10 - Imperative vs Declarative Deployements]], [[11 - Updating Existing Objects]], [[12 - Declarative Updates in Action]], [[13 - Limitations in Config Updates]], [[14 - Running Containers with Deployments]], [[15 - Deployment Configuration files.]], [[16 - Walkthrough Deployment Config]], [[17 - Applying a Deployment]], [[18 - Why use Services?]], [[19 - Scaling and Chaning Deployments]], [[20 - Updating Deployment Images]], [[21 - Rebuilding the Client Image]], [[22 - Triggering Deployment Updates]], [[23 - Imperatively Updating a Deployment's Image]], [[24 - The Path to Production]], [[25 - A Quick Checkpoint]], [[26 - Recreating the Deployment]], [[27 - NodePort vs ClusterIP Services]], [[28 - The ClusterIP Config]], [[29 - Applying Multiple Files with Kubectl]], [[30 - Express API deployment config]], [[31 - ClusterIP for Express API]], [[32 - Combining Config Into Single Files]], [[33 - The Worker Deployment]], [[34 - Reapplying Batch of Config Files]], [[35 - Volumes vs Persistent Volumes]], [[36 - Last set of config]], [[37 - The need for Volumes with Database]], [[38 -Kubernetes Volumes]]).
+
+The newest production-deploy lessons then make the rollout machinery more explicit: the deploy script must build and push all three images, plain `latest` is not enough to force deployment refreshes, Git SHAs become the immutable image tags used for deterministic rollouts and easier debugging, the remote cluster still needs manual Cloud Shell setup for secret creation, ingress-nginx installation on GKE now goes through Helm, and the next visible result is a real ingress controller plus cloud load balancer sitting in front of the cluster ([[63 - Unique Deployment Images]], [[64 - Unique Tags for Built Image]], [[65 - Updating the Deployment Script]], [[66 - Configuring the gcloud CLI on the cloud console]], [[67 - Helm and its setup]], [[68 - The result of ingress-nginx]]).
+
+The newest raw notes then clarify two missing operational mental models around that same deployment path: GitHub Actions runs on an ephemeral GitHub-hosted runner rather than on a GCP VM, `kubectl` is only the client that sends desired state into GKE, and cloud-secret handling now has three explicit maturity levels ranging from one-time manual cluster secret creation through GitHub-managed secret injection to Secret Manager plus an operator for production workloads ([[2026-04-22-mental-model-of-github-actions-gke-deployment]], [[2026-04-22-managing-secrets-for-cloud-deployment]], [[github-actions-gke-deployment-flow]], [[kubernetes-cloud-deployment-secret-management]]).
+
+The next lesson cluster then opens a second production layer: HTTPS. A real domain is required, Let's Encrypt validates ownership through an HTTP challenge path, cert-manager is installed as the automation controller, the repo creates `ClusterIssuer` and `Certificate` objects in the cert-manager API group, the certificate material lands in a Kubernetes secret, and the ingress manifest is finally upgraded to force HTTPS and consume that TLS secret ([[69 - HTTPS SETUP OVERVIEW]], [[70 - Cert Manager Install]], [[71 - How to wire up Cert Manager]], [[72 - Issuer Config File]], [[73 - Certificate Config File]], [[74 - Deploying Changes]], [[75 - Ingress for Config]], [[kubernetes-https-cert-manager-flow]]).
+
+The newest local-development lessons then pivot back away from production and address the inner loop: plain Kubernetes is too slow for iterative frontend and service work, so Skaffold becomes the development-time bridge. The sources distinguish rebuild-versus-sync modes, split the repo between shared base manifests and dev-only / prod-only overlays, and show `skaffold dev` syncing source changes directly into running containers for a faster feedback loop ([[76 - skaffold overview]], [[77 - Skaffold Config]], [[78 - Live sync changes]], [[skaffold-local-kubernetes-development]]).
+
+## Key Subthemes
+
+- A cluster is presented as a control machine plus worker machines.
+- Nodes do not need to be identical; they can run different container mixes.
+- Operators declare what should run, and the control layer distributes that work.
+- Load balancing is part of the system boundary between outside traffic and cluster workloads.
+- Local development is presented as a `minikube`-based workflow.
+- Production is presented as a choice between managed services such as EKS or GKE and do-it-yourself cluster operation.
+- `kubectl` is the consistent operator interface across both local and production environments.
+- Kubernetes expects images to already be built before deployment.
+- Kubernetes configuration is presented as multiple files that create objects rather than one file that directly lists containers.
+- Networking in Kubernetes is framed as substantially more explicit and manual than Docker Compose networking.
+- Early hands-on examples use a `Pod` manifest to run a workload and a `Service` of type `NodePort` to expose it.
+- Production image rollout is now taught as a two-tag strategy:
+  - `latest` for default fresh applies
+  - `git SHA` for exact deployment updates
+- The production deployment flow is only partly declarative because it still combines manifest apply with imperative steps such as secret creation, `kubectl set image`, and ingress-controller installation.
+- Google Cloud Shell is treated as a practical operator terminal for one-off setup against the live GKE cluster.
+- A GitHub Actions deployment job runs on a GitHub-hosted ephemeral runner, not on a GCP VM.
+- `kubectl` on the runner is only a client; the actual reconciliation, scheduling, image pulling, and container startup happen inside GKE after the API server receives those requests.
+- Cloud-deployment secret handling now has an explicit maturity ladder:
+  - manual cluster secret creation for course-aligned simplicity
+  - GitHub Actions-managed secret creation for reproducibility
+  - Secret Manager plus an operator for production-grade separation
+- Once ingress-nginx is installed on GKE, the visible infrastructure chain is:
+  - Google Cloud load balancer
+  - Kubernetes `LoadBalancer` service
+  - ingress-nginx controller
+  - application services and deployments
+- HTTPS setup now has a clear object model:
+  - `ClusterIssuer` says where and how to request certificates
+  - `Certificate` says what cert to obtain and what secret should store it
+  - ingress consumes that secret and forces HTTPS
+- The current cert-manager manifests should use the modern API group `cert-manager.io/v1`.
+- The ingress-side issuer annotation should use `cert-manager.io/cluster-issuer`, not the older `certmanager.k8s.io/cluster-issuer`.
+- HTTPS rollout has a hard dependency order:
+  - deploy issuer and certificate first
+  - wait for cert-manager to create the TLS secret
+  - only then point ingress at that secret
+- Local Kubernetes development now has an explicit ergonomic layer:
+  - Skaffold watches files
+  - syncs compatible changes directly into containers
+  - falls back to rebuilds when sync rules do not apply
+- The repo structure for local development is now split between:
+  - `k8s/` shared base manifests
+  - `k8s-dev/` development-only overlays
+  - `k8s-prod/` production-only ingress and certificate resources
+- `kind` selects the object type the manifest should create.
+- `apiVersion` scopes which object kinds are available in the manifest.
+- A `Pod` is the smallest deployable unit in Kubernetes; Kubernetes does not deploy naked standalone containers.
+- Multiple containers belong in one pod only when they are tightly coupled and must run together.
+- A `Service` uses selectors and labels to find the correct target pod.
+- `NodePort` exposes a development workload externally through the node, typically via `kube-proxy`.
+- `port`, `targetPort`, and `nodePort` represent different routing layers rather than redundant numbers.
+- A `ClusterIP` service keeps the same selector-based routing model as `NodePort`, but it drops `nodePort` because it is meant for internal-only access.
+- `kubectl apply -f <directory>` is now introduced as a practical way to apply a whole set of related manifests at once.
+- `kubectl apply -f` is the basic manifest-application workflow for changing cluster state.
+- `kubectl get pods` and `kubectl get services` are the first cluster-status inspection commands in the current source base.
+- Whether a local `NodePort` workload is reachable through `localhost` or a VM IP depends on the local Kubernetes runtime.
+- Kubernetes maintains a desired state and keeps comparing it against the actual state of the cluster.
+- The control layer assigns work across nodes rather than requiring developers to manage nodes directly.
+- Nodes can pull images locally and create replacement containers when the control layer decides more copies are needed.
+- Restart behavior is not accidental; it is part of Kubernetes continuously reconciling cluster state.
+- Imperative deployment means the operator computes the migration steps manually from current state to desired state.
+- Declarative deployment means the operator updates configuration and lets Kubernetes compute the migration path.
+- The current lesson sequence treats declarative deployment as the intended long-term workflow, especially for production usage.
+- The current practical update rule is: keep `kind` and object name stable, change the desired fields, and apply the config again.
+- Changing an identifying field such as the object name is presented as the boundary between "update the old object" and "create a new object" in the course's simplified model.
+- `kubectl describe` is now introduced as the detailed inspection command for verifying what changed inside a specific object.
+- Event history is part of the practical debugging surface: it can show image pulls, definition changes, and restart reasons after a declarative update.
+- Pod updates have immutability limits: some fields, like image, can change in place, while others, like `containerPort`, cannot.
+- Declarative workflow does not guarantee that every field on every object is mutable; the object's update rules still control what is allowed.
+- `Deployment` is now introduced as the normal higher-level object for running containers in serious development and production usage.
+- A deployment manages one or more identical pods rather than one-off pod instances.
+- A deployment uses a pod template to define what its managed pods should look like.
+- The current lesson sequence now treats direct pods as foundational learning objects and deployments as the main practical interface for evolving workloads.
+- The first concrete deployment manifest now adds three important fields to the mental model: `replicas`, `selector.matchLabels`, and `template`.
+- `apps/v1` is now the concrete API version used for `Deployment` in the current material.
+- The `template` block is now explicitly explained as embedded pod configuration for every pod the deployment creates.
+- `selector.matchLabels` and `template.metadata.labels` must line up so the deployment can find and manage the pods it asked Kubernetes to create.
+- `kubectl get deployments` is now introduced as the deployment-level status view.
+- Deployment health is now described through `desired`, `current`, `up-to-date`, and `available`.
+- Deleting old objects with `kubectl delete -f` is now explicitly treated as one place where imperative control still appears in an otherwise declarative workflow.
+- `kubectl get pods -o wide` is now used to expose the fact that pods have their own IP addresses.
+- Pod IPs are now explicitly framed as unstable user-facing targets because deployments can recreate pods at new IPs.
+- A `Service` is now justified as a stable access layer that keeps routing traffic to whatever pods currently match its selector.
+- Changing a deployment template can recreate managed pods instead of mutating the existing pod in place.
+- `replicas` is now shown in practice as the scaling control for how many identical pods the deployment should keep alive.
+- During a rollout, `current` can temporarily exceed `desired` because old and new pods may briefly coexist while Kubernetes transitions toward the newest template.
+- Rebuilding and pushing a newer image to Docker Hub is separate from getting the cluster to adopt that image.
+- `kubectl apply -f` reacts to manifest changes, not to invisible registry-side image content changes behind the same image reference.
+- Image rollout workflow is now framed as an operational problem with imperfect solutions: manual pod deletion, explicit version tags in config, or a versioned image plus an imperative update command.
+- `kubectl set image` is now introduced as the concrete imperative command for changing the image property on a deployment-managed container.
+- Versioned image tags are now shown as the bridge between "new image exists" and "deployment can target a specific new image."
+- Pod age and browser-visible output are now both used as practical verification signals after an image rollout.
+- The learning sequence is now shifting from single-object mechanics to a full multi-service application architecture.
+- `Ingress Service`, `ClusterIP`, and `Persistent Volume Claim` are now introduced as the next major production-oriented concepts.
+- The workflow is now explicitly staged as: define config locally, test on `minikube`, automate with GitHub/Travis, then deploy to a cloud provider.
+- Before the multi-service Kubernetes migration begins, the source sequence now inserts a baseline sanity check: make sure the old Docker Compose app still works on the local Docker daemon.
+- Docker daemon context now matters as a migration prerequisite because testing the Compose app against the wrong daemon would make the checkpoint misleading.
+- The migration now starts deleting old deployment-path files and replacing them with Kubernetes manifests inside a dedicated `k8s/` directory.
+- The first recreated manifest in the real app migration is now the `multi-client` deployment with three replicas and the familiar `component: web` label model.
+- `ClusterIP` is now framed as the internal-only service type for object-to-object communication inside the cluster.
+- `NodePort` is now explicitly contrasted as the outside-facing service type that made the earlier browser demos possible.
+- `Ingress` is now starting to take over the role of public entry point, with `ClusterIP` handling routing after traffic is inside the cluster.
+- The same deployment template pattern is now being reused for the backend API, with `component: server` and `containerPort: 5000`.
+- Redis and Postgres connection details are now explicitly recognized as environment-variable wiring that must be injected into the backend container later.
+- The backend service pattern now mirrors the frontend service pattern: one `ClusterIP` service per internal app component, using selectors to target the right deployment-managed pods.
+- Multiple Kubernetes objects can share one YAML file when separated by `---`, but the current course convention still prefers one object per file.
+- Not every deployment needs a service; the worker becomes the first explicit example of a deployment that accepts no inbound traffic and therefore exposes no port and no service.
+- `kubectl logs` is now part of the practical validation loop, because a pod can be `Running` while the app inside is still misconfigured.
+- Redis is now introduced as a single-replica internal dependency reached through a `ClusterIP` service on port `6379`.
+- Postgres is now also introduced as a single-replica internal dependency reached through a `ClusterIP` service on port `5432`.
+- Stateful workloads now force a new line of reasoning: container restarts, pod replacement, and persistence are different failure boundaries.
+- A Kubernetes `Volume` is now explicitly distinguished from the broader generic idea of a volume and from `PersistentVolume`/`PersistentVolumeClaim`.
+- The storage story now becomes more precise: `Volume` is pod-tied storage, `PersistentVolume` is storage that can outlive the pod, and `PersistentVolumeClaim` is the request layer developers use to ask for that persistent storage.
+- The persistence sequence now also has real operational config: a concrete PVC manifest, an explanation of PVC access modes and storage requests, visibility into the default `StorageClass`, and the first real deployment template that mounts the claim into Postgres through `volumes` and `volumeMounts`.
+- The persistence sequence now also includes its first cluster-side verification step: applying the updated manifests, checking the restarted Postgres pod, and inspecting `pv` and `pvc` objects to confirm that the requested storage is actually bound.
+- After the storage objects are proven to exist, the next transition is into environment-variable wiring, where the course begins separating plain constant config values from connection-oriented values used to reach in-cluster dependencies.
+- That runtime-wiring phase now becomes concrete: the worker and server deployments get explicit `env` blocks for Redis and Postgres connection values, while `PGPASSWORD` is split out into a Kubernetes `Secret` created imperatively.
+- The secret sequence now has its first full consumption step: both the server and Postgres deployments read password data from the `pgpassword` secret, and the next failure mode becomes YAML typing rather than missing configuration.
+- That next failure mode is now resolved too: the port-related env values are quoted as strings, which makes the manifests acceptable to Kubernetes again and turns the sequence from design correction into basic runtime-readiness.
+- With the core app config now applying cleanly, the source sequence turns back to the remaining public-entry problem: how traffic should enter the cluster in a production-shaped setup, why ingress is preferred over a raw `LoadBalancer` service, how ingress-nginx differs from similarly named projects, and how ingress controllers fit the same controller-driven desired-state model as deployments.
+
+## Evidence Across Sources
+
+- [[The Whys and What's of Kubernetes -]] introduces the cluster, master, nodes, container placement, and the basic "when Kubernetes is worth it" framing.
+- [[2 - Kubernetes in Development and Production]] introduces `minikube`, `kubectl`, managed production services, and the local-versus-production split.
+- [[3 - Mapping Existing Knowledge]] maps Docker Compose knowledge into Kubernetes, emphasizing prebuilt images, multiple object configs, and explicit networking.
+- [[4 - Adding Config files]] provides the first concrete pod and NodePort service manifests for the `multi-client` example.
+- [[5 - Object Types and API Versions]] explains `kind`, `apiVersion`, and the idea that manifests create cluster objects.
+- [[6 - Running Container in Pods]] explains why Kubernetes deploys pods rather than naked containers and when a pod should contain multiple containers.
+- [[7 - Service Config Files in Depth]] explains `Service`, `NodePort`, `kube-proxy`, selector/label matching, and the service port fields.
+- [[8 - Connecting to Running Containers]] shows the first end-to-end application loop: apply manifests, verify pod and service status, and connect to the workload through the node's externally reachable address.
+- [[9 - Entire Deployment Flow]] explains the deeper orchestration loop: the master reads desired state, distributes work across nodes, tracks status, and restores missing workload copies after failures.
+- [[10 - Imperative vs Declarative Deployements]] explains why Kubernetes is usually used declaratively: the operator edits config files to describe the target state instead of issuing one-off commands for each change.
+- [[11 - Updating Existing Objects]] turns declarative updates into a concrete workflow by showing how to modify an existing pod's image through the original config file instead of an imperative one-off command.
+- [[12 - Declarative Updates in Action]] verifies that workflow in practice by showing `pod/client-pod configured`, a stable pod name, a changed image, and `describe` events that record the restart and new image pull.
+- [[13 - Limitations in Config Updates]] shows the boundary of that workflow by demonstrating that changing `containerPort` on an existing pod is rejected even when the manifest is re-applied declaratively.
+- [[14 - Running Containers with Deployments]] introduces the workaround and the next object-model step: use a deployment to manage pods through a pod template instead of editing bare pods directly.
+- [[15 - Deployment Configuration files.]] provides the first real deployment YAML and shows how `replicas`, `selector`, and `template` fit together in a single manifest.
+- [[16 - Walkthrough Deployment Config]] explains why those deployment fields exist at all, especially how `template` defines pods and how the selector gets a handle on the pods the deployment manages.
+- [[17 - Applying a Deployment]] shows the first practical deployment rollout: remove the old direct pod, apply the deployment, observe the new generated pod name, and read deployment health with `kubectl get deployments`.
+- [[18 - Why use Services?]] explains why a deployment does not remove the need for a service: pods have internal, changing IPs, so a selector-based service remains the stable way to reach the workload.
+- [[19 - Scaling and Chaning Deployments]] shows that deployment edits can recreate pods, increase pod count through `replicas`, and temporarily run old and new pod versions together during an image rollout.
+- [[20 - Updating Deployment Images]] resets the deployment back to a single browser-testable `multi-client` pod so the image-update problem can be observed cleanly.
+- [[21 - Rebuilding the Client Image]] shows the application-side change, Docker rebuild, and Docker Hub push that create a newer image version.
+- [[22 - Triggering Deployment Updates]] explains why an unchanged manifest does not refresh images and compares three imperfect workaround families.
+- [[23 - Imperatively Updating a Deployment's Image]] turns the preferred workaround into a concrete recipe using a versioned image tag plus `kubectl set image`, then verifies the rollout through pod age and browser output.
+- [[24 - The Path to Production]] introduces the full Fibonacci app architecture inside Kubernetes and lays out the staged path from local config work to CI/CD and cloud deployment.
+- [[25 - A Quick Checkpoint]] verifies that the old Docker Compose version of the multi-container app still works before the Kubernetes migration begins.
+- [[26 - Recreating the Deployment]] starts the actual manifest migration by cleaning the project, creating `k8s/client-deployment.yml`, and rebuilding the frontend as a three-replica deployment.
+- [[27 - NodePort vs ClusterIP Services]] explains why the full app is moving away from direct `NodePort` exposure and toward `ClusterIP` services behind `Ingress`.
+- [[28 - The ClusterIP Config]] creates the actual frontend `ClusterIP` service manifest and shows that internal services keep `port` and `targetPort` while removing `nodePort`.
+- [[29 - Applying Multiple Files with Kubectl]] shows the first directory-wide manifest apply, including partial success, YAML correction, and post-apply verification with `kubectl get`.
+- [[30 - Express API deployment config]] creates the backend deployment shell for the Express API and makes it explicit that Redis/Postgres environment variables still need to be added before the backend is fully wired.
+- [[31 - ClusterIP for Express API]] creates the backend internal service and reinforces that the Express API remains an in-cluster component rather than a directly exposed public endpoint.
+- [[32 - Combining Config Into Single Files]] explains that manifests can be grouped into multi-document YAML files, while defending separate files as the clearer default for this course.
+- [[33 - The Worker Deployment]] creates the worker deployment and explains why the worker is deployment-only, with no service and no exposed port.
+- [[34 - Reapplying Batch of Config Files]] shows that reapplying the whole config directory remains safe at this stage and that `kubectl logs` is needed to catch backend misconfiguration after object creation.
+- [[35 - Volumes vs Persistent Volumes]] actually adds Redis and its internal service, despite the title suggesting a storage lesson.
+- [[36 - Last set of config]] adds the Postgres deployment and internal service, closing the repetitive service/deployment setup phase.
+- [[37 - The need for Volumes with Database]] explains the real persistence problem behind databases by showing why Postgres data cannot live only in the container filesystem.
+- [[38 -Kubernetes Volumes]] clarifies that a Kubernetes `Volume` is pod-level storage and is still not enough for durable database data.
+- [[39 - Volume vs Persistent Volume]] makes the lifecycle comparison explicit by showing that pod-level `Volume` storage dies with the pod, while a `PersistentVolume` survives pod recreation.
+- [[40 - Persistent Volume vs Persistent Volume Claim]] explains the request-versus-resource split: a `PersistentVolumeClaim` asks for storage, while a `PersistentVolume` is the actual storage that satisfies the claim, whether pre-created or provisioned on demand.
+- [[41 - Claim Config files]] creates the first real PVC YAML for the course, requesting `ReadWriteOnce` access and `2Gi` of storage under the name `database-persistent-volume-claim`.
+- [[42 - Persistent Volume Access Modes]] explains what the PVC spec fields actually mean, especially the difference between `ReadWriteOnce`, `ReadOnlyMany`, and `ReadWriteMany`.
+- [[43 - Where does Kubernetes Allocate Persistent Volumes]] introduces the default-storage-class story by showing that local development often uses host-backed storage while cloud environments can provision from many different backends.
+- [[44 - Designating a PVC in a POD Template]] finishes the first real persistent-storage wiring by attaching the claim to the Postgres pod template and mounting it at `/var/lib/postgresql/data` with `subPath: postgres`.
+- [[45 - Applying a PVC]] verifies the result at runtime by reapplying the config, checking that Postgres restarted, and showing that the generated persistent volume is bound to `database-persistent-volume-claim`.
+- [[46 -Defining Environment Variables]] begins the next configuration phase by distinguishing between ordinary constant environment variables and the connection-style values the app will need in order to reach Redis and Postgres.
+- [[47 - Adding Environment Variables to Config]] turns that distinction into real deployment YAML by adding Redis env vars to the worker and Redis/Postgres env vars to the server, still leaving `PGPASSWORD` out for security reasons.
+- [[48 - Creating an Encoded Secret]] introduces Kubernetes `Secret` as the storage mechanism for sensitive values and uses an imperative `kubectl create secret generic pgpassword --from-literal PGPASSWORD=postgres` command as the course's practical secret-creation workflow.
+- [[49 - Postgres Environment Variable Fix]] completes the first secret-consumption path by wiring `valueFrom.secretKeyRef` into both the server and Postgres deployments, then immediately exposes the next manifest issue when `kubectl apply` fails because numeric env values are not being treated as strings.
+- [[50 - Environment Variables as Strings]] fixes that apply failure by quoting `REDIS_PORT` and `PGPORT` in the `env` blocks, showing that the problem was YAML typing rather than secret configuration.
+- [[51 - Load Balancer Services]] revisits the service taxonomy and explains why a single `LoadBalancer` service is not a good fit for this app’s outside-facing routing needs.
+- [[52. - Quick Note on Ingress]] introduces ingress as the preferred outside-routing tool and makes the crucial distinction between the `ingress-nginx` project and the separate `nginxinc/kubernetes-ingress` project.
+- [[53 - Ingress setup notes]] adds the practical warning that ingress-nginx installation differs by environment, especially across local setups and cloud providers.
+- [[54 - Behind the Scenes of Ingress]] explains ingress using the controller mental model, showing that an ingress config declares routing rules and an ingress controller makes those rules real inside the cluster.
+- [[55 - More Behind the Scenes of Ingress]] maps that controller model onto a Google Cloud-style architecture in which ingress-nginx, a cloud load balancer, an in-cluster `LoadBalancer` service, and a default backend all work together.
+- [[56 - Ingress Nginx installation and setup]] supplies the first concrete local setup instruction for Docker Desktop, but it does so by pointing to the official ingress-nginx quick-start docs rather than copying the install command into the repo.
+- [[57 - Creating Ingress Configuration]] creates the first real ingress manifest, routes `/` to the client service, routes `/api/` to the server service, and uses the nginx rewrite annotation so the server does not have to see the public `/api` prefix.
+- [[kubernetes-modern-ingress-format]] captures the migration from the course's older ingress schema to the stable modern shape used by the current cluster, including `networking.k8s.io/v1`, `ingressClassName`, required `pathType`, and nested backend service fields.
+- [[59 - The Deployment Process]] turns the production path into a concrete deployment checklist and updates the cloud side of the course toward GKE Autopilot, billing awareness, and real cluster lifecycle concerns.
+- [[60 - CI Setup]] explains the full CI/CD pipeline that will build, test, push images, apply manifests, and then imperatively move deployments onto the new image tags.
+- [[61 - Installing google cloud sdk]] captures the old Travis bootstrap step for Google Cloud SDK installation and service-account authentication, while the modern notes translate that into official GitHub Actions based Google Cloud auth and GKE credential setup.
+- [[62 - Service Account Steps for GCP]] captures the old Google Cloud console flow for generating a JSON service-account key, while the modern notes explain that GitHub Actions should prefer Workload Identity Federation and treat key files as a fallback only.
+- [[63 - Unique Deployment Images]] drafts the real `deploy.sh` flow for building, pushing, applying manifests, and updating deployments, then shows why using only the implicit `latest` tag still fails to force a rollout.
+- [[64 - Unique Tags for Built Image]] fixes that flaw conceptually by introducing the Git commit SHA as the unique per-build image tag while keeping `latest` for easier fresh applies and onboarding.
+- [[65 - Updating the Deployment Script]] turns the SHA-tag idea into concrete `.travis.yml` and `deploy.sh` changes, including dual-tag builds, dual pushes, and SHA-specific `kubectl set image` commands.
+- [[66 - Configuring the gcloud CLI on the cloud console]] explains how to prepare Google Cloud Shell to target the live GKE cluster before manually creating the remote `pgpassword` secret.
+- [[67 - Helm and its setup]] adds the production ingress-controller install step, and its update note makes Helm the current ingress-nginx installation path for GKE.
+- [[68 -]] remains a screenshot-only placeholder source, but its asset is now canonicalized locally and the fuller lesson content now lives in [[68 - The result of ingress-nginx]].
+- [[68 - The result of ingress-nginx]] shows the first visible result of the Helm install: ingress controller workloads, a default backend, a `LoadBalancer` service, an external IP, and the Google Cloud load balancer in front of the cluster.
+- [[2026-04-22-mental-model-of-github-actions-gke-deployment]] corrects the deployment mental model by separating the GitHub-hosted runner from the GKE cluster and by making `kubectl`'s client role explicit.
+- [[2026-04-22-managing-secrets-for-cloud-deployment]] compares manual cluster secrets, GitHub Actions-managed secret creation, and Secret Manager plus an operator, while recommending them as increasing levels of sophistication rather than equivalent defaults.
+- [[69 - HTTPS SETUP OVERVIEW]] explains the Let's Encrypt ownership-validation flow and makes a purchased domain a hard prerequisite for HTTPS.
+- [[70 - Cert Manager Install]] installs cert-manager through Helm and preserves the update note as the modern install source of truth.
+- [[71 - How to wire up Cert Manager]] explains the two-object cert-manager model: issuer for where/how to ask, certificate for what cert to obtain and where to store it.
+- [[72 - Issuer Config File]] preserves the modern `ClusterIssuer` manifest shape in `cert-manager.io/v1`, including the nginx HTTP-01 solver.
+- [[73 - Certificate Config File]] preserves the modern `Certificate` manifest shape, especially `issuerRef`, `secretName`, `commonName`, and `dnsNames`.
+- [[74 - Deploying Changes]] makes the dependency order explicit: deploy issuer and certificate first, wait for cert-manager to create the secret, and only then update ingress to use it.
+- [[75 - Ingress for Config]] adds the ingress-side HTTPS wiring, including the modern `cert-manager.io/cluster-issuer` annotation, SSL redirect, and the `tls` block that names the certificate secret.
+- [[76 - skaffold overview]] introduces Skaffold as the missing local-development feedback-loop tool for Kubernetes, distinguishing rebuild mode from direct file-sync mode.
+- [[77 - Skaffold Config]] preserves the local-vs-production manifest split into `k8s/`, `k8s-dev/`, and `k8s-prod/`, plus the modernized `skaffold.yaml` and dev Dockerfile tweaks.
+- [[78 - Live sync changes]] demonstrates the first practical `skaffold dev` loop, including file sync into running containers and rebuild fallback for non-synced files.
+- [[kubernetes-https-cert-manager-flow]] consolidates the multi-step HTTPS setup path from ingress-nginx through cert-manager, issuer, certificate, secret creation, and final ingress TLS wiring.
+- [[skaffold-local-kubernetes-development]] consolidates the new local-development model around Skaffold, sync rules, and separation of dev and prod manifests.
+- [[github-actions-gke-deployment-flow]] captures the modern GitHub Actions equivalent of that older Travis-based pipeline, including Google Cloud auth, GKE credentials, Docker Hub login, image builds, and deployment updates.
+- [[kubernetes-cloud-deployment-secret-management]] distills the wiki's current secret-handling answer into a ranked recommendation rather than leaving the issue split across the older course secret notes and the newer cloud-deployment guidance.
+- [[multi-k8s-google-cloud-ui-setup-for-github-actions]] turns that modern CI guidance into a concrete step-by-step setup sequence for this actual project, including the exact trust binding pattern and the first smoke-test workflow.
+- [[multi-k8s-github-actions-files-and-flow]] explains the practical split between `.github/workflows/ci.yaml` and `.github/workflows/deploy.yaml`, and walks through the purpose of each part of the current files.
+- [[github-actions-yaml-patterns-for-ci-cd]] generalizes that explanation into a reusable way to think about writing CI/CD workflow YAML from first principles.
+
+## Disagreements Or Caveats
+
+- The current source uses older terminology such as `master`, so future sources may require terminology cleanup or mapping.
+- The current wiki only covers the motivational architecture layer and early setup framing, not detailed mechanics like pods, deployments, services, or scheduling internals.
+- The current wiki has now named `Pod` and `Service` as the first concrete object kinds, but it still stops short of explaining the more typical production object model beyond those introductory examples.
+- The local setup advice appears historically specific. Future sources may supersede the `VirtualBox`-centric path and formalize Docker Desktop or other local options.
+- One pasted service YAML block appears to contain a likely transcription typo around `port` versus `ports`, so copied config should be checked against the earlier spoken walkthrough.
+- The source base now contains both a minikube-specific access rule and a Docker Desktop exception, so local access guidance should be treated as runtime-specific rather than universal.
+- The control-plane explanation is still intentionally simplified; future sources may replace the single `Kube API Server` teaching model with a more exact component breakdown.
+- Some external tutorials or blog posts may recommend imperative `kubectl` actions that work technically but cut against the declarative workflow this source base is building toward.
+- The new update lesson teaches `name + kind` as the matching rule for updating an existing object, which is useful for the current examples but still simpler than the fuller Kubernetes identity model.
+- The current pod-update example proves the mechanics of declarative change, but it still uses a direct pod manifest rather than the more typical higher-level production object model.
+- The newest lesson shows that even within a declarative workflow, direct pod mutation is tightly limited, which further suggests that pod-level editing is not the general long-term model for production change management.
+- The new deployment lesson gives the right high-level direction, but it has not yet shown the actual deployment YAML or the exact mechanism Kubernetes uses to replace or roll forward managed pods.
+- The first deployment-YAML lesson still postpones the detailed line-by-line explanation of how `selector` and `template` must line up and how the existing `Service` should connect to deployment-managed pods.
+- The new walkthrough clarifies the selector/template relationship conceptually, but it still does not show the failure mode when labels do not align or the exact service-to-deployment wiring.
+- The new apply lesson left the service question open, and the new service lesson answers the high-level why, but the exact internal mechanism that keeps service endpoints synchronized is still not shown.
+- The newest service lesson mixes a `minikube`-style spoken explanation with `docker-desktop` command output, so the access path should still be treated as runtime-specific rather than universal.
+- The new scaling lesson makes rollout behavior much more concrete, but it still does not explain which rollout strategy rules allow extra pods to exist temporarily during an update.
+- The same lesson is internally inconsistent about the replacement port value, mentioning both `99999` and `999`.
+- The new image-update sequence makes the deployment workflow more realistic, but it also exposes a real tension: image freshness is not naturally captured by unchanged declarative config.
+- The source sequence now leans toward an imperative command as the least bad image-refresh solution, which complicates the earlier clean declarative story.
+- The new imperative update lesson resolves the mechanism question, but it pushes more responsibility into external scripts and automation if the team wants to preserve a reliable source-of-truth workflow.
+- The new production-path lesson adds architecture scope quickly, but it is still only a high-level map; the actual mechanics of `Ingress`, `ClusterIP`, and storage are still deferred.
+- The new checkpoint lesson is operationally disciplined, but it also shows that the migration now depends on keeping two mental models alive at once: the old Compose baseline and the new Kubernetes target architecture.
+- The first migration lesson is concrete, but its pasted YAML is slightly malformed, so the durable structure has to be reconstructed from the spoken explanation rather than copied blindly.
+- The new service-comparison lesson clarifies the networking boundary well, but it still does not show the actual `ClusterIP` manifest that will put the idea into practice.
+- The new `ClusterIP` manifest lesson closes the basic config gap, but it still does not show service DNS usage or the `Ingress` object that will route outside traffic into this internal frontend service.
+- The new multi-file apply lesson is operationally useful, but the spoken diagnosis of the deployment typo does not cleanly match the server error shown in the transcript.
+- The new backend deployment lesson gives the structural manifest cleanly, but it intentionally stops before the harder part of wiring runtime dependencies such as Redis and Postgres into the container environment.
+- The new backend `ClusterIP` service lesson completes the structural service pair cleanly, but it still does not show service discovery by name or the eventual `Ingress` route into the backend.
+- The config-combination lesson is intentionally opinionated toward separate files, but it does not explore when larger real-world repos might choose grouped manifests or higher-level config tooling instead.
+- The worker lesson cleanly explains why no service is needed, but it still does not show the Redis environment variables that will make the worker useful.
+- The batch reapply lesson shows a backend connection failure, but the spoken explanation of which dependency failed does not perfectly match the displayed port number.
+- The Redis lesson is structurally useful, but its title does not match its body content, and its pasted YAML includes transcription errors that have to be corrected from the spoken walkthrough.
+- The Postgres manifest lesson also contains pasted-YAML transcription errors, so the spoken walkthrough is more reliable than the raw block.
+- The database-persistence lessons now set up the storage problem clearly, but the actual PVC implementation still has not appeared yet.
+- The Kubernetes-volume lesson is conceptually clear, but it still leaves the concrete binding/provisioning mechanics of PV/PVC for later.
+- The new PV/PVC analogy lesson makes the request/resource split much easier to understand, but it is still analogy-first and still does not show the actual YAML fields that will appear in the Postgres config.
+- The new PVC-config lessons now show the actual YAML clearly, but the transcript still simplifies a lot of the storage ecosystem, especially which backends support which access modes and how production storage classes are chosen in practice.
+- The Postgres PVC-mount lesson gives the practical deployment wiring, but its pasted YAML has transcription issues such as `matchingLabels` and `PersistentVolumeClaim` capitalization, so the spoken walkthrough is more trustworthy than the raw block.
+- The new PVC-apply lesson proves that the storage objects exist and bind correctly, but it still does not prove real persistence through a write-delete-recreate test because the app has not been fully wired to use Postgres yet.
+- The new environment-variable lesson is only a fragment, so it provides the classification idea and screenshots but not yet the full variable list or the final deployment YAML changes.
+- The new env-config lesson fills in most of the variable list, but it still leaves the final `PGPASSWORD` consumption step for later.
+- The new secret lesson gives a practical workflow, but it deliberately introduces an imperative setup step that now has to be repeated outside the normal declarative apply flow.
+- The new secret-consumption lesson shows the right `valueFrom.secretKeyRef` pattern, but it also demonstrates how easy it is for a manifest to fail on field types even after the overall design is correct.
+- The new string-fix lesson resolves the type error cleanly, but it is still only a config-validity win; the source sequence still has not yet demonstrated full application behavior after these env and secret changes.
+- The ingress sequence now includes a Docker Desktop-specific install pointer and a first ingress manifest, but the exact local install command still lives in external docs and the first ingress YAML is internally inconsistent between the spoken walkthrough and the screenshot header.
+- The ingress lesson now has a durable modern migration note, but the exact rewrite regex and path behavior still depend on the ingress controller, so the routing pattern should be verified against the live cluster rather than treated as controller-neutral Kubernetes syntax.
+- The Google Cloud ingress explanation is helpful conceptually, but it also makes the setup look more uniform than it really is across runtimes and providers.
+- The new production-checklist and CI lessons are operationally useful, but they are historically tied to Travis CI and older Google Cloud UI flows, so the durable logic matters more than the exact original platform-specific clicks.
+- The old CI bootstrap lesson still assumes a long-lived Google Cloud service-account key file in CI, while the modern preferred pattern is Workload Identity Federation or another short-lived official auth flow.
+- The new GCP service-account walkthrough is still useful context for old course code, but its broad role plus downloadable JSON key model should not be treated as the modern default.
+- The new April 22 transcript files reference screenshots that are not currently preserved canonically in `raw/assets`, so those visuals are gaps rather than reliable local evidence.
+- The deployment path is now functionally split across declarative manifests and imperative cluster mutations, which makes the operational story realistic but less clean than the earlier declarative framing.
+- [[68 -]] is too incomplete to support normal synthesis because it contains only a screenshot reference and no prose.
+- The new raw-note sources are internal explanatory notes from a recent session, not official vendor docs, so they are best treated as durable working models and recommendations rather than as formal documentation.
+
+## Open Questions
+
+- How should the wiki map this source's `master` terminology to modern Kubernetes terminology?
+- What are the smallest useful next concepts to add: pod, deployment, service, or control plane?
+- Under what conditions is a simpler deployment model still the better choice?
+- What is the modern recommended local Kubernetes setup for development?
+- Which Kubernetes object model should this wiki treat as the closest production-ready analogue to a simple Docker Compose service beyond the introductory Pod plus Service pattern?
+- What are the next networking primitives after `NodePort`, and how do they supersede this development-only path?
+- Which inspection and debugging commands come next after `kubectl get` once a pod or service does not behave as expected?
+- Which higher-level object is actually responsible for keeping multiple copies running in normal modern Kubernetes practice?
+- When are imperative `kubectl` commands useful for debugging or experimentation without undermining the declarative production workflow?
+- How should the course's simplified "same name and kind means update" rule be reconciled with the fuller Kubernetes identity model as the material gets more advanced?
+- Which `kubectl` inspection commands usually come immediately after `describe` once the workflow expands from simple pod examples to more complex higher-level objects?
+- What is the workaround the course is about to introduce for changes to pod fields that Kubernetes will not update in place?
+- What exact deployment manifest structure and field set replace the earlier bare `Pod` manifest in the next step of the course?
+- How exactly do `selector.matchLabels` and `template.metadata.labels` need to align for the deployment to manage the correct pods?
+- How will the course next connect the existing `Service` selector logic to the pods being created by the deployment?
+- What exact Kubernetes mechanism keeps the service's current target pod list synchronized as deployment-managed pods are replaced?
+- What rollout strategy settings are responsible for allowing `current` to temporarily exceed `desired` during a deployment update?
+- What exact imperative command and image-tagging pattern will the course recommend for updating deployment images in practice?
+- How should a production workflow record or reconcile `kubectl set image` changes if the manifest file is not updated at the same time?
+- What exact manifests and object relationships will the course use to connect `Ingress`, `ClusterIP` services, deployments, Redis, Postgres, and the `Postgres PVC`?
+- What is the first concrete Kubernetes manifest the course will write when it starts translating the old Docker Compose app into Kubernetes objects?
+- What exact `ClusterIP` service manifest will the course pair with the new `client-deployment` in the next step?
+- After the first ingress manifest is applied, what exact local testing steps are required to prove ingress routing works on Docker Desktop?
+- What is the modern replacement for the older `extensions/v1beta1` ingress manifest shape used in the course?
+- What exact local test sequence should be used next to verify that the migrated ingress manifest really routes browser traffic to the client and rewrites `/api` correctly for the server?
+- What exact GitHub Actions workflow should this vault standardize on for building, testing, tagging, pushing, and deploying the `client`, `server`, and `worker` images to GKE?
+- Which exact GitHub Actions secrets, repository variables, and Google Cloud IAM roles should be documented next so the modern CI workflow can be used without guesswork?
+- What minimum Google Cloud IAM permissions are actually required for the GitHub Actions deployment flow, so the course's broader `Kubernetes Engine Admin` role can be narrowed down?
+- Once the minimal auth smoke test succeeds, what exact final `deploy.yml` should this vault standardize on for the `multi-k8s` repo?
+- What exact final `deploy.yaml` should be written for `multi-k8s` once Docker Hub details are filled in and the current smoke test has passed?
+- Which of manual cluster secret creation, GitHub Actions-managed secret creation, or Secret Manager sync should this repo standardize on for future cloud deploys?
+- If this repo upgrades beyond manual Cloud Shell secret creation, what exact workflow step or controller setup should become the default implementation?
+- After ingress-nginx is installed with Helm, what is the first end-to-end production verification sequence for the app's public route, `/api` route, and database-backed behavior?
+- How will another pod or service actually address `client-cluster-ip-service` by name once service-to-service communication starts appearing in the course?
+- What exact next object will finally expose the frontend again once the browser can no longer reach the app through the new internal-only `ClusterIP` service?
+- What exact environment variables and service names will the course use to let `multi-server` connect to Redis and Postgres from inside the cluster?
+- How will the frontend or ingress layer actually call `server-cluster-ip-service` once the routing configuration is introduced?
+- At what scale does the course's preferred one-file-per-object organization stop being the clearest option?
+- What exact environment variables will be added to the worker and server so they can discover and connect to Redis and Postgres correctly?
+- When the course finally returns to the promised storage topic, how will it distinguish ordinary volumes from persistent volumes in the context of Postgres?
+- What exact YAML and object relationship will the course use to create the `PersistentVolumeClaim` for Postgres?
+- Which storage details, such as access mode, requested size, or storage class, will the course expose once it moves from analogy into real PVC configuration?
+- Which runtime check will the course use next to prove that the Postgres PVC is actually mounted and persisting data correctly?
+- At what point will the course move from default local `StorageClass` behavior into production-grade storage-class selection or explicit `storageClassName` configuration?
+- When will the course actually write data into Postgres, recreate the pod, and confirm that the PVC-backed storage preserved the data?
+- How will Postgres, server, and worker discover each other by service name once the environment variables are finally added?
+- What exact environment-variable keys and values will the course add to the server and worker manifests for Redis and Postgres connectivity?
+- How will the server deployment actually read `PGPASSWORD` from the `pgpassword` secret in its `env` block?
+- Which exact env entries need to be quoted as strings so the deployments stop failing with `cannot convert int64 to string`?
+- After the env and secret fixes now apply cleanly, what is the next runtime check that proves the server, worker, Redis, and Postgres are all actually talking to each other?
+- What exact local installation steps and manifest will the course use to create the first ingress-nginx setup on the local cluster?
+- What is the actual argument for choosing ingress-nginx over a manually managed custom NGINX plus `LoadBalancer` service setup?
+
+## Related Pages
+
+- [[The Whys and What's of Kubernetes -]]
+- [[2 - Kubernetes in Development and Production]]
+- [[3 - Mapping Existing Knowledge]]
+- [[4 - Adding Config files]]
+- [[5 - Object Types and API Versions]]
+- [[6 - Running Container in Pods]]
+- [[7 - Service Config Files in Depth]]
+- [[8 - Connecting to Running Containers]]
+- [[9 - Entire Deployment Flow]]
+- [[10 - Imperative vs Declarative Deployements]]
+- [[11 - Updating Existing Objects]]
+- [[12 - Declarative Updates in Action]]
+- [[13 - Limitations in Config Updates]]
+- [[14 - Running Containers with Deployments]]
+- [[15 - Deployment Configuration files.]]
+- [[16 - Walkthrough Deployment Config]]
+- [[17 - Applying a Deployment]]
+- [[18 - Why use Services?]]
+- [[19 - Scaling and Chaning Deployments]]
+- [[20 - Updating Deployment Images]]
+- [[21 - Rebuilding the Client Image]]
+- [[22 - Triggering Deployment Updates]]
+- [[23 - Imperatively Updating a Deployment's Image]]
+- [[24 - The Path to Production]]
+- [[25 - A Quick Checkpoint]]
+- [[26 - Recreating the Deployment]]
+- [[27 - NodePort vs ClusterIP Services]]
+- [[28 - The ClusterIP Config]]
+- [[29 - Applying Multiple Files with Kubectl]]
+- [[30 - Express API deployment config]]
+- [[31 - ClusterIP for Express API]]
+- [[32 - Combining Config Into Single Files]]
+- [[33 - The Worker Deployment]]
+- [[34 - Reapplying Batch of Config Files]]
+- [[35 - Volumes vs Persistent Volumes]]
+- [[36 - Last set of config]]
+- [[37 - The need for Volumes with Database]]
+- [[38 -Kubernetes Volumes]]
+- [[39 - Volume vs Persistent Volume]]
+- [[40 - Persistent Volume vs Persistent Volume Claim]]
+- [[41 - Claim Config files]]
+- [[42 - Persistent Volume Access Modes]]
+- [[43 - Where does Kubernetes Allocate Persistent Volumes]]
+- [[44 - Designating a PVC in a POD Template]]
+- [[45 - Applying a PVC]]
+- [[46 -Defining Environment Variables]]
+- [[47 - Adding Environment Variables to Config]]
+- [[48 - Creating an Encoded Secret]]
+- [[49 - Postgres Environment Variable Fix]]
+- [[50 - Environment Variables as Strings]]
+- [[51 - Load Balancer Services]]
+- [[52. - Quick Note on Ingress]]
+- [[53 - Ingress setup notes]]
+- [[54 - Behind the Scenes of Ingress]]
+- [[55 - More Behind the Scenes of Ingress]]
+- [[56 - Ingress Nginx installation and setup]]
+- [[57 - Creating Ingress Configuration]]
+- [[kubernetes-modern-ingress-format]]
+- [[59 - The Deployment Process]]
+- [[60 - CI Setup]]
+- [[61 - Installing google cloud sdk]]
+- [[62 - Service Account Steps for GCP]]
+- [[63 - Unique Deployment Images]]
+- [[64 - Unique Tags for Built Image]]
+- [[65 - Updating the Deployment Script]]
+- [[66 - Configuring the gcloud CLI on the cloud console]]
+- [[67 - Helm and its setup]]
+- [[68 -]]
+- [[2026-04-22-mental-model-of-github-actions-gke-deployment]]
+- [[2026-04-22-managing-secrets-for-cloud-deployment]]
+- [[github-actions-gke-deployment-flow]]
+- [[kubernetes-cloud-deployment-secret-management]]
+- [[multi-k8s-google-cloud-ui-setup-for-github-actions]]
+- [[multi-k8s-github-actions-files-and-flow]]
+- [[github-actions-yaml-patterns-for-ci-cd]]
+- [[modern-local-kubernetes-development-setup]]

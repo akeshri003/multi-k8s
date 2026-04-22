@@ -1,0 +1,261 @@
+{
+  "main": {
+    "id": "0c6224dbde6f2264",
+    "type": "split",
+    "children": [
+      {
+        "id": "a9a56c14b92cb217",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "904186f14d0cee84",
+            "type": "leaf",
+            "pinned": true,
+            "state": {
+              "type": "terminal:terminal",
+              "state": {
+                "terminal:terminal": {
+                  "cwd": "/Users/aryankeshri/Documents/Courses",
+                  "focus": false,
+                  "profile": {
+                    "args": [],
+                    "executable": "/bin/zsh",
+                    "followTheme": false,
+                    "name": "",
+                    "platforms": {
+                      "darwin": true
+                    },
+                    "pythonExecutable": "python3",
+                    "restoreHistory": false,
+                    "rightClickAction": "copyPaste",
+                    "successExitCodes": [
+                      "0",
+                      "SIGINT",
+                      "SIGTERM"
+                    ],
+                    "terminalOptions": {
+                      "documentOverride": null
+                    },
+                    "type": "integrated",
+                    "useWin32Conhost": true
+                  },
+                  "serial": null
+                }
+              },
+              "pinned": true,
+              "icon": "terminal",
+              "title": "Terminal: zsh"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "f9bc08337f00f199",
+    "type": "split",
+    "children": [
+      {
+        "id": "9b47fcef28b329e9",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "6e978e04fb22fc4b",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false
+              },
+              "icon": "lucide-folder-closed",
+              "title": "Files"
+            }
+          },
+          {
+            "id": "de94981ca225c03b",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "Search"
+            }
+          },
+          {
+            "id": "1577474872be6aa0",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "Bookmarks"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 285.5
+  },
+  "right": {
+    "id": "9886bc94d71157aa",
+    "type": "split",
+    "children": [
+      {
+        "id": "18e91ef66a3ab21d",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "134be1116ab9359e",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "collapseAll": true,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "Backlinks"
+            }
+          },
+          {
+            "id": "8eab12c92ffb74ac",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "Welcome.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "Outgoing links from Welcome"
+            }
+          },
+          {
+            "id": "14c2c8c2c430a6e0",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "Tags"
+            }
+          },
+          {
+            "id": "8d5a15acbbbd6869",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "All properties"
+            }
+          },
+          {
+            "id": "3692606c33cc3ecc",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "followCursor": false,
+                "showSearch": true,
+                "searchQuery": "attribute"
+              },
+              "icon": "lucide-list",
+              "title": "Outline"
+            }
+          }
+        ],
+        "currentTab": 4
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Open quick switcher": false,
+      "graph:Open graph view": false,
+      "canvas:Create new canvas": false,
+      "daily-notes:Open today's daily note": false,
+      "templates:Insert template": false,
+      "command-palette:Open command palette": false,
+      "bases:Create new base": false,
+      "terminal:Open terminal": false
+    }
+  },
+  "active": "904186f14d0cee84",
+  "lastOpenFiles": [
+    "global.png",
+    "bbug the app knowing the exact code that is.png",
+    "wiki/analysis/skaffold-local-kubernetes-development.md",
+    "wiki/analysis/kubernetes-https-cert-manager-flow.md",
+    "derived/notes/78 - Live sync changes - Explainer.md",
+    "derived/notes/78 - Live sync changes - Cheat Sheet.md",
+    "wiki/sources/78 - Live sync changes.md",
+    "derived/notes/77 - Skaffold Config - Explainer.md",
+    "derived/notes/77 - Skaffold Config - Cheat Sheet.md",
+    "wiki/sources/77 - Skaffold Config.md",
+    "derived/notes/76 - skaffold overview - Explainer.md",
+    "derived/notes/76 - skaffold overview - Cheat Sheet.md",
+    "wiki/sources/76 - skaffold overview.md",
+    "derived/notes/75 - Ingress for Config - Explainer.md",
+    "derived/notes/75 - Ingress for Config - Cheat Sheet.md",
+    "wiki/sources/75 - Ingress for Config.md",
+    "derived/notes/74 - Deploying Changes - Explainer.md",
+    "derived/notes/74 - Deploying Changes - Cheat Sheet.md",
+    "wiki/sources/74 - Deploying Changes.md",
+    "derived/notes/73 - Certificate Config File - Explainer.md",
+    "derived/notes/73 - Certificate Config File - Cheat Sheet.md",
+    "wiki/sources/73 - Certificate Config File.md",
+    "derived/notes/72 - Issuer Config File - Explainer.md",
+    "derived/notes/72 - Issuer Config File - Cheat Sheet.md",
+    "wiki/sources/72 - Issuer Config File.md",
+    "derived/notes/71 - How to wire up Cert Manager - Explainer.md",
+    "derived/notes/71 - How to wire up Cert Manager - Cheat Sheet.md",
+    "raw/assets/Pasted image 20260422212525.png",
+    "raw/assets/Pasted image 20260423011457.png",
+    "raw/assets/Pasted image 20260423010827.png",
+    "raw/assets/Pasted image 20260423010007.png",
+    "raw/assets/Pasted image 20260423005906.png",
+    "raw/assets/Pasted image 20260423005820.png",
+    "raw/assets/Pasted image 20260423005810.png",
+    "raw/assets/Pasted image 20260423005641.png",
+    "raw/assets/Pasted image 20260423005600.png",
+    "Clippings",
+    "raw/assets/Untitled",
+    "schemas/templates",
+    "schemas/checklists",
+    "schemas",
+    "wiki/questions",
+    "wiki/maps",
+    "wiki/analysis",
+    "wiki/topics",
+    "derived/transcripts"
+  ]
+}
